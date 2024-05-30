@@ -2,6 +2,7 @@ import axios, {InternalAxiosRequestConfig} from "axios";
 import {BASE_URL, TOKEN} from "../consts.ts";
 import Cookies from "js-cookie";
 import UserStore from "../store/UserStore.ts";
+import {router} from "../main.tsx";
 
 const $api = axios.create({
   baseURL: BASE_URL,
@@ -17,12 +18,13 @@ const requestInterceptor = (config: InternalAxiosRequestConfig<any>) => {
 
 const responseInterceptor = async (error: any) => {
   const config = error.config;
-  if (error.response.status === 401 && error.config && !error.config._isRetry) {
+  if (error.response.status !== 200 && error.config && !error.config._isRetry) {
     config._isRetry = true;
     try {
       await UserStore.renew();
       return $api.request(config);
     } catch (e) {
+      await router.navigate('/login');
       console.log(e);
     }
   }

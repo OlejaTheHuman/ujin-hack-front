@@ -8,7 +8,6 @@ import {
 } from '../types/user.types.ts';
 import LoginService from '../api/loginService.ts';
 import {REFRESH_TOKEN, TOKEN} from '../consts.ts';
-import {router} from '../main.tsx';
 import ErrorHandler, {ErrorI} from '../utils/errorHandler.ts';
 import Cookies from "js-cookie";
 import {AxiosResponse} from "axios";
@@ -109,17 +108,18 @@ class UserStore {
       const refreshToken = Cookies.get(REFRESH_TOKEN);
       if (!refreshToken) throw new Error('refreshToken');
       const response = await LoginService.renewTokens({refreshToken: refreshToken});
-      this.setAuth(true);
       Cookies.set(TOKEN, response.data.token);
       Cookies.set(REFRESH_TOKEN, response.data.refreshToken);
+      this.setAuth(true);
       return response;
     } catch (e) {
+      Cookies.remove(TOKEN)
+      Cookies.remove(REFRESH_TOKEN)
       this.setAuth(false);
       const errorsConfig: ErrorI[] = [
         {errorText: 'Ошибка авторизации', code: 401},
       ];
       ErrorHandler.handleRequestError(e, errorsConfig);
-      await router.navigate('/login');
     }
     throw new Error();
   }
