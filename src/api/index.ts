@@ -30,7 +30,6 @@ const responseInterceptor = async (error: any) => {
 };
 
 $api.interceptors.request.use(requestInterceptor);
-
 $api.interceptors.response.use((config) => config, responseInterceptor);
 
 export default $api;

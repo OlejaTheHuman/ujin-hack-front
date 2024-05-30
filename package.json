@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.3.7",
+    "@salutejs/client": "^1.34.1",
+    "@sberdevices/assistant-client": "^5.0.2",
     "antd": "^5.17.4",
     "axios": "^1.7.2",
     "js-cookie": "^3.0.5",

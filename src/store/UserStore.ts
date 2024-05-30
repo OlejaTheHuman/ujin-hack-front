@@ -4,8 +4,7 @@ import {
   LoginRequestI,
   RegisterRequestI,
   RegisterResponseI,
-  RenewUserTokensResponseI,
-  UserI
+  RenewUserTokensResponseI
 } from '../types/user.types.ts';
 import LoginService from '../api/loginService.ts';
 import {REFRESH_TOKEN, TOKEN} from '../consts.ts';
@@ -14,10 +13,13 @@ import ErrorHandler, {ErrorI} from '../utils/errorHandler.ts';
 import Cookies from "js-cookie";
 import {AxiosResponse} from "axios";
 import {sha256} from "js-sha256";
+import UserService, {GetUsernameResponseI} from "../api/userService.ts";
 
 class UserStore {
   isAuth = false;
-  user: UserI = {};
+  _user: GetUsernameResponseI = {
+    userName: '',
+  };
 
   constructor() {
     makeAutoObservable(this);
@@ -27,10 +29,25 @@ class UserStore {
     this.isAuth = isAuth;
   }
 
+  get user(): GetUsernameResponseI {
+    return this._user;
+  }
+
+  async loadUserData(): Promise<AxiosResponse<GetUsernameResponseI>> {
+    try {
+      const response = await UserService.getUsername();
+      this._user = response.data;
+      return response;
+    } catch (e) {
+      ErrorHandler.handleError('Ошибка загрузки данных');
+    }
+    throw new Error();
+  }
+
   async login(data: LoginRequestI): Promise<AxiosResponse<CreateUserSessionResponseI>> {
     try {
       const response = await LoginService.login({email: data.email, password: sha256(data.password)});
-      Cookies.set(TOKEN, response.data.accessToken);
+      Cookies.set(TOKEN, response.data.token);
       Cookies.set(REFRESH_TOKEN, response.data.refreshToken);
       this.setAuth(true);
       return response;
@@ -76,7 +93,7 @@ class UserStore {
 
   async logout(): Promise<AxiosResponse> {
     try {
-      const response = await LoginService.logout();
+      const response = await LoginService.logout(Cookies.get(TOKEN));
       Cookies.remove(TOKEN);
       Cookies.remove(REFRESH_TOKEN);
       this.setAuth(false);
@@ -89,13 +106,13 @@ class UserStore {
 
   async renew(): Promise<AxiosResponse<RenewUserTokensResponseI>> {
     try {
-      // const refreshToken = Cookies.get(REFRESH_TOKEN);
-      // if (!refreshToken) throw new Error('refreshToken');
-      // const response = await LoginService.renewTokens({refreshToken: refreshToken});
+      const refreshToken = Cookies.get(REFRESH_TOKEN);
+      if (!refreshToken) throw new Error('refreshToken');
+      const response = await LoginService.renewTokens({refreshToken: refreshToken});
       this.setAuth(true);
-      // Cookies.set(TOKEN, response.data.accessToken);
-      // Cookies.set(REFRESH_TOKEN, response.data.refreshToken);
-      // return response;
+      Cookies.set(TOKEN, response.data.token);
+      Cookies.set(REFRESH_TOKEN, response.data.refreshToken);
+      return response;
     } catch (e) {
       this.setAuth(false);
       const errorsConfig: ErrorI[] = [

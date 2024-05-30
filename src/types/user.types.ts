@@ -14,7 +14,7 @@ export interface LoginRequestI {
 }
 
 export interface CreateUserSessionResponseI {
-  accessToken: string;
+  token: string;
   refreshToken: string;
 }
 
@@ -22,7 +22,10 @@ export interface RenewUserTokensRequestI {
   refreshToken: string;
 }
 
-export interface RenewUserTokensResponseI extends CreateUserSessionResponseI {}
+export interface RenewUserTokensResponseI {
+  token: string;
+  refreshToken: string;
+}
 
 export interface UserI {
   username?: string;

@@ -2,9 +2,8 @@ import {
   RegisterRequestI,
   RegisterResponseI,
   LoginRequestI,
-  CreateUserSessionResponseI,
   RenewUserTokensRequestI,
-  RenewUserTokensResponseI,
+  RenewUserTokensResponseI, CreateUserSessionResponseI,
 } from '../types/user.types.ts';
 import { AxiosResponse } from 'axios';
 import $api from './index.ts';
@@ -22,8 +21,8 @@ export default class LoginService {
     return $api.post<CreateUserSessionResponseI>(`${this.loginBaseUrl}/token`, data);
   }
 
-  static async logout(): Promise<AxiosResponse> {
-    return $api.delete<CreateUserSessionResponseI>(`${this.loginBaseUrl}/session`);
+  static async logout(currentToken?: string): Promise<AxiosResponse> {
+    return $api.post<CreateUserSessionResponseI>(`${this.loginBaseUrl}/invalidate-token`, {currentToken});
   }
 
   static async verifyRegistration(data: string): Promise<AxiosResponse<void>> {
@@ -34,15 +33,9 @@ export default class LoginService {
     return $api.post(`${this.loginBaseUrl}/reset-password`, { login: data });
   }
 
-  static async resetPassword(
-    data: RegisterRequestI,
-  ): Promise<AxiosResponse<CreateUserSessionResponseI>> {
-    return $api.put(`${this.loginBaseUrl}/reset-password`, data);
-  }
-
   static async renewTokens(
     data: RenewUserTokensRequestI,
   ): Promise<AxiosResponse<RenewUserTokensResponseI>> {
-    return $api.put(`${this.loginBaseUrl}/session`, data);
+    return $api.post(`${this.loginBaseUrl}/refresh-token`, data);
   }
 }
