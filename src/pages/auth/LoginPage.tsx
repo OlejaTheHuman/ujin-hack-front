@@ -84,4 +84,3 @@ const LoginPage = observer(() => {
 })
 
 export default LoginPage;
-;
